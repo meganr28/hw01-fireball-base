@@ -1,4 +1,4 @@
-import {vec4, mat4} from 'gl-matrix';
+import {vec2, vec4, mat4} from 'gl-matrix';
 import Drawable from './Drawable';
 import {gl} from '../../globals';
 
@@ -31,6 +31,7 @@ class ShaderProgram {
   unifColor: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
   unifNoiseScale: WebGLUniformLocation;
+  unifDimensions: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -52,6 +53,7 @@ class ShaderProgram {
     this.unifColor      = gl.getUniformLocation(this.prog, "u_Color");
     this.unifTime      = gl.getUniformLocation(this.prog, "u_Time");
     this.unifNoiseScale = gl.getUniformLocation(this.prog, "u_NoiseScale");
+    this.unifDimensions = gl.getUniformLocation(this.prog, "u_Dimensions");
   }
 
   use() {
@@ -100,6 +102,13 @@ class ShaderProgram {
     this.use();
     if (this.unifNoiseScale !== -1) {
       gl.uniform1f(this.unifNoiseScale, scale);
+    }
+  }
+
+  setDimensions(dimensions: vec2) {
+    this.use();
+    if (this.unifDimensions !== -1) {
+      gl.uniform2fv(this.unifDimensions, dimensions);
     }
   }
 

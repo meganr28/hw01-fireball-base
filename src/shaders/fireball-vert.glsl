@@ -150,7 +150,8 @@ float fbm3D(vec3 p)
         float freq = pow(2.f, float(i));
         float amp = pow(persistence, float(i));
 
-        total += amp * abs(perlinNoise3D(p));
+        //total += amp * abs(perlinNoise3D(p));
+        total += amp * interpolateNoise3D(p.x * freq, p.y * freq, p.z * freq);
     }
 
     return total;
@@ -268,28 +269,35 @@ void main()
                                                             // perpendicular to the surface after the surface is transformed by
                                                             // the model matrix.
 
-    float offsetX = 0.5 * (cos(float(u_Time) / 500.f) + 1.f);
-    float offsetY = 0.5 * (sin(float(u_Time) / 500.f) + 1.f);
-    float offsetZ = 0.5 * (-cos(float(u_Time) / 500.f) + 1.f);
+    float offsetX = (cos(float(u_Time) / 200.f) + 1.f);
+    float offsetY = (sin(float(u_Time) / 200.f) + 1.f);
+    float offsetZ = (-cos(float(u_Time) / 200.f) + 1.f);
     vec3 offset = vec3(offsetX, offsetY, offsetZ);
 
     // Get rotated/transformed point
     vec4 transformed_Pos = transformVertex(vs_Pos);
 
-    //float noiseLow = 2.0f * fbm3D(0.05f * vec3(vs_Pos.x, vs_Pos.y, vs_Pos.z));
-    //float noiseHigh = 0.5f * fbm3D(vec3(5.f * vs_Pos.x + time, 5.f * vs_Pos.y + time, 5.f * vs_Pos.z + time));
-    //float noise = noiseHigh + noiseLow;
-    float noise = 0.5f * worley3D(2.f * vs_Pos.xyz + offset.xyz);
-    noise = 0.2 * smoothstep(0.1f, 0.6f, noise);
-    //noise += noiseLow + noiseHigh;
-
-    // Pass noise as color to fragment shader
-    fs_Col = vec4(vec3(noise), 1.0);
+    float noiseHigh = 0.5f * fbm3D(vec3(50.f * vs_Pos.xyz + offset));
+    float noise = 0.6f * pow(worley3D(3.f * vs_Pos.xyz + offset.xyz), 1.5f);
+    noise += noiseHigh;
+    noise = 0.2 * smoothstep(0.1f, 0.8f, noise);
+    noise = bias(0.4, noise);
+    //noise = fbmDist;
 
     // Apply model matrix to transformed point
     transformed_Pos += u_NoiseScale * (1.f - noise) * transformVertex(vs_Nor);
     vec4 modelposition = u_Model * (transformed_Pos);   // Temporarily store the transformed vertex positions for use below
     fs_Pos = modelposition;
+
+    // Distorted fbm
+    float s = 0.5 * (sin(float(u_Time) / 100.f) + 1.f);
+    //float s = 4.0;
+    vec3 p1 = vec3(fbm3D(fs_Pos.xyz), fbm3D(fs_Pos.xyz + vec3(1.3f, 3.5f, 4.5f)), fbm3D(fs_Pos.xyz + vec3(4.4f, 3.2f, 9.0f)));
+    vec3 p2 = vec3(fbm3D(fs_Pos.xyz), fbm3D(fs_Pos.xyz + vec3(10.3f, 3.3f, 1.4f)), fbm3D(fs_Pos.xyz + vec3(5.6f, 45.2f, 2.0f)));
+    float fbmDist = fbm3D(p1 + s * p2);
+
+    // Pass noise as color to fragment shader
+    fs_Col = vec4(noise, fbmDist, 1.0, 1.0);
 
     fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies
 

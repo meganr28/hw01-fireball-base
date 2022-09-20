@@ -28,6 +28,13 @@ out vec4 out_Col; // This is the final output color that you will see on your
 
 const float PI = 3.1415926535897932384626433832795;
 
+// Fire color palette
+const vec3 fire[5] = vec3[](vec3(56,4,4) / 255.0,         // darkest
+                            vec3(128,6,4) / 255.0,
+                            vec3(242,138,41) / 255.0,
+                            vec3(249,222,81) / 255.0,
+                            vec3(251,245,19) / 255.0);    // lightest
+
 // From Inigo Quilez - "Color Palettes" https://iquilezles.org/articles/palettes/ 
 vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d)
 {
@@ -96,6 +103,26 @@ float map(float value, float min1, float max1, float min2, float max2) {
   return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
 }
 
+vec3 computeColor(float noise)
+{
+    if(noise < 0.1) {
+        return fire[0];
+    }
+    else if(noise < 0.15) {
+        return mix(fire[0], fire[1], (noise - 0.1) / 0.05);
+    }
+    else if(noise < 0.2) {
+        return mix(fire[1], fire[2], (noise - 0.15) / 0.05);
+    }
+    else if(noise < 0.25) {
+        return mix(fire[2], fire[3], (noise - 0.2) / 0.05);
+    }
+    else if(noise < 0.3) {
+        return mix(fire[3], fire[4], (noise - 0.25) / 0.05);
+    }
+    return fire[4];
+}
+
 void main()
 {
         // Material base color (before shading)
@@ -124,21 +151,23 @@ void main()
                                                             //to simulate ambient lighting. This ensures that faces that are not
                                                             //lit by our point light are not completely black.
 
-        // Calculate noise (distorted FBM)
-        //float s = 0.5 * (sin(float(u_Time) / 500.0f) + 1.f);
-        float s = 4.0;
+        // Calculate distorted fbm
+        float s = 0.5 * (sin(float(u_Time) / 100.f) + 1.f);
+        //float s = 4.0;
         vec3 p1 = vec3(fbm3D(fs_Pos.xyz), fbm3D(fs_Pos.xyz + vec3(1.3f, 3.5f, 4.5f)), fbm3D(fs_Pos.xyz + vec3(4.4f, 3.2f, 9.0f)));
         vec3 p2 = vec3(fbm3D(fs_Pos.xyz), fbm3D(fs_Pos.xyz + vec3(10.3f, 3.3f, 1.4f)), fbm3D(fs_Pos.xyz + vec3(5.6f, 45.2f, 2.0f)));
         float fbmDist = fbm3D(p1 + s * p2);
 
-        float fbm = 1.f - fs_Col.x;
+        float fbm = fs_Col.x;
         //float fbm = smoothstep(0.0, 1.0, 1.f - fs_Col.x);
         //fbm = map(fbmDist + fs_Col.x, 0.0, 2.0, 0.0, 0.55);
-        fbm = map(1.f - fbm, 0.0, 1.0, 0.0, 0.3);
+        //fbm = map(1.f - fbm, 0.0, 1.0, 0.0, 1.0);
+        fbm = fbmDist * fs_Col.y * pow(fbm, 0.3);
 
         // Compute final shaded color
         vec3 paletteColor = palette(fbm, a, b, c, d);
+        vec3 computedColor = computeColor(fbm);
         //diffuseColor.xyz = mix(diffuseColor.xyz, paletteColor.xyz, fbm);
-        out_Col = vec4(paletteColor.xyz, 1.0);
-        //out_Col = fs_Col;
+        //out_Col = vec4(mix(paletteColor.xyz, computedColor.xyz, 0.7), 1.0);
+        out_Col = vec4(computedColor.xyz, 1.0);
 }
