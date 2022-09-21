@@ -14,7 +14,7 @@ const controls = {
   tesselations: 5,
   color: [ 255, 0, 0, 255 ],
   shape: 'Icosphere',
-  surfaceRoughness: 1.0,
+  surfaceOffset: 1.0,
   coronaScale: 1.0,
   'Load Scene': loadScene, // A function pointer, essentially
 };
@@ -33,6 +33,10 @@ function loadScene() {
   square.create();
 }
 
+function revertToDefault() {
+  
+}
+
 function main() {
   // Initial display for framerate
   const stats = Stats();
@@ -49,7 +53,7 @@ function main() {
                                                                                        controls.color[1] / 255, 
                                                                                        controls.color[2] / 255, 
                                                                                        controls.color[3] / 255); });
-  gui.add(controls, 'surfaceRoughness', 0.0, 1.0).step(0.1);
+  gui.add(controls, 'surfaceOffset', 0.0, 1.0).step(0.1);
   gui.add(controls, 'coronaScale', 0.0, 1.0).step(0.1);
   gui.add(controls, 'Load Scene');
 
@@ -82,8 +86,8 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/fireball-frag.glsl')),
   ]);
 
-  fireball.setNoiseScale(controls.surfaceRoughness);
-  background.setNoiseScale(controls.surfaceRoughness);
+  fireball.setNoiseScale(controls.surfaceOffset);
+  background.setNoiseScale(controls.surfaceOffset);
 
   // This function will be called every frame
   function tick() {
@@ -97,11 +101,11 @@ function main() {
       icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       icosphere.create();
     }
-    if (controls.surfaceRoughness != prevNoiseScale)
+    if (controls.surfaceOffset != prevNoiseScale)
     {
-      prevNoiseScale = controls.surfaceRoughness;
-      fireball.setNoiseScale(controls.surfaceRoughness);
-      background.setNoiseScale(controls.surfaceRoughness);
+      prevNoiseScale = controls.surfaceOffset;
+      fireball.setNoiseScale(controls.surfaceOffset);
+      background.setNoiseScale(controls.surfaceOffset);
     }
 
     time++;
@@ -113,7 +117,7 @@ function main() {
 
     gl.enable(gl.DEPTH_TEST);
 
-    renderer.render(camera, fireball, currentColor, time, [icosphere]);
+    //renderer.render(camera, fireball, currentColor, time, [icosphere]);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame

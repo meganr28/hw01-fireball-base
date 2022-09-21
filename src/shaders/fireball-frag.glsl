@@ -35,13 +35,34 @@ const vec3 fire[5] = vec3[](vec3(56,4,4) / 255.0,         // darkest
                             vec3(249,222,81) / 255.0,
                             vec3(251,245,19) / 255.0);    // lightest
 
+// Given the above palette, return the appropriate color based on a noise value
+vec3 computeColor(float noise)
+{
+    if(noise < 0.1) {
+        return fire[0];
+    }
+    else if(noise < 0.15) {
+        return mix(fire[0], fire[1], (noise - 0.1) / 0.05);
+    }
+    else if(noise < 0.2) {
+        return mix(fire[1], fire[2], (noise - 0.15) / 0.05);
+    }
+    else if(noise < 0.25) {
+        return mix(fire[2], fire[3], (noise - 0.2) / 0.05);
+    }
+    else if(noise < 0.3) {
+        return mix(fire[3], fire[4], (noise - 0.25) / 0.05);
+    }
+    return fire[4];
+}
+
 // From Inigo Quilez - "Color Palettes" https://iquilezles.org/articles/palettes/ 
 vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d)
 {
     return a + b * cos(6.28318 * (c * t + d));
 }
 
-// Noise function implementation based on CIS 560 and CIS 566 Slides - "Noise Functions"
+// Noise and interpolation functions based on CIS 560 and CIS 566 Slides - "Noise Functions"
 float noise3D(vec3 p) 
 {
     return fract(sin((dot(p, vec3(127.1, 311.7, 191.999)))) * 43758.5453);
@@ -55,6 +76,7 @@ float cosineInterpolate(float a, float b, float t)
 
 float interpolateNoise3D(float x, float y, float z)
 {
+    // Get integer and fractional components of current position
     int intX = int(floor(x));
     float fractX = fract(x);
     int intY = int(floor(y));
@@ -62,6 +84,7 @@ float interpolateNoise3D(float x, float y, float z)
     int intZ = int(floor(z));
     float fractZ = fract(z);
 
+    // Get noise value at each of the 8 vertices
     float v1 = noise3D(vec3(intX, intY, intZ));
     float v2 = noise3D(vec3(intX + 1, intY, intZ));
     float v3 = noise3D(vec3(intX, intY + 1, intZ));
@@ -71,6 +94,7 @@ float interpolateNoise3D(float x, float y, float z)
     float v7 = noise3D(vec3(intX, intY + 1, intZ + 1));
     float v8 = noise3D(vec3(intX + 1, intY + 1, intZ + 1));
 
+    // Interpolate in the X, Y, Z directions
     float i1 = cosineInterpolate(v1, v2, fractX);
     float i2 = cosineInterpolate(v3, v4, fractX);
     float mix1 = cosineInterpolate(i1, i2, fractY);
@@ -95,32 +119,6 @@ float fbm3D(vec3 p)
     }
 
     return total;
-}
-
-// TODO: redo this
-// https://gist.github.com/companje/29408948f1e8be54dd5733a74ca49bb9
-float map(float value, float min1, float max1, float min2, float max2) {
-  return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
-}
-
-vec3 computeColor(float noise)
-{
-    if(noise < 0.1) {
-        return fire[0];
-    }
-    else if(noise < 0.15) {
-        return mix(fire[0], fire[1], (noise - 0.1) / 0.05);
-    }
-    else if(noise < 0.2) {
-        return mix(fire[1], fire[2], (noise - 0.15) / 0.05);
-    }
-    else if(noise < 0.25) {
-        return mix(fire[2], fire[3], (noise - 0.2) / 0.05);
-    }
-    else if(noise < 0.3) {
-        return mix(fire[3], fire[4], (noise - 0.25) / 0.05);
-    }
-    return fire[4];
 }
 
 void main()
@@ -158,16 +156,13 @@ void main()
         vec3 p2 = vec3(fbm3D(fs_Pos.xyz), fbm3D(fs_Pos.xyz + vec3(10.3f, 3.3f, 1.4f)), fbm3D(fs_Pos.xyz + vec3(5.6f, 45.2f, 2.0f)));
         float fbmDist = fbm3D(p1 + s * p2);
 
+        // Perturb by value passed from vertex shader
         float fbm = fs_Col.x;
-        //float fbm = smoothstep(0.0, 1.0, 1.f - fs_Col.x);
-        //fbm = map(fbmDist + fs_Col.x, 0.0, 2.0, 0.0, 0.55);
-        //fbm = map(1.f - fbm, 0.0, 1.0, 0.0, 1.0);
         fbm = fbmDist * fs_Col.y * pow(fbm, 0.3);
 
         // Compute final shaded color
         vec3 paletteColor = palette(fbm, a, b, c, d);
         vec3 computedColor = computeColor(fbm);
-        //diffuseColor.xyz = mix(diffuseColor.xyz, paletteColor.xyz, fbm);
         //out_Col = vec4(mix(paletteColor.xyz, computedColor.xyz, 0.7), 1.0);
         out_Col = vec4(computedColor.xyz, 1.0);
 }
