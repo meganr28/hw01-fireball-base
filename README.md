@@ -1,5 +1,49 @@
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
 
+# Journey Through a Nebula
+
+<p align="center">
+  <img src="images/nebula1.PNG"> 
+</p>
+
+For this assignment, I wanted to create the illusion of moving through a nebula. When looking at images of space, I thought the star placement and clouds could be good practice for using noise and other toolbox functions. For the main star in the center, I deformed the vertices using low frequency `Worley` noise with a layer of high frequency `FBM` on the top. I used a rotation matrix and several offsets based on `sin` and `cos` to continuously move the vertices over time. I colored the icosphere by mapping the `FBM` value to a fiery color gradient. I also added domain warping, which is described in more detail in Inigo Quilez's blog post in the References. 
+
+For the background, I wanted to create the effect of moving through a field of stars. This was achieved by scattering stars uniformly across a grid and then jittering their positions to create a random, but well-distributed placement. This grid was then drawn at different scales and depths and looped over time to make the moving field. I added cloud layers made of `FBM` multiplied by `1.0 - Perlin` to mimic the look of real nebulas. This also gave me a chance to use the `sawtooth_wave` function and `ease_in_out` functions to creating the fading in/looping effect of the field. The shader I've linked in the References was a good source of inspiration for what I wanted to achieve. 
+
+### Live Demo
+
+See it [here](https://meganr28.github.io/hw01-fireball-base/)!
+
+### Parameters
+
+The artist can control these parameters:
+* Tesselations - for the icosphere, this controls the number of subdivisions (default: 5).
+* Surface Offset - how much vertex deformation you want to apply.
+* Corona Scale - how far the corona should extend. 
+* Star Density - quantity of stars.
+* Cloud Color - color of nebula clouds.
+* Star Color - base color for the stars. 
+
+### Toolbox Functions
+
+These functions came in handy during this assignment:
+
+* `ease_in_out` - for fading the background layers in and out
+* `smoothstep` - used in many places, but most notably for remapping noise values and fading the clouds
+* `sin` and `cos` - mostly used with the time variable
+* `bias` - remapping the noise value for deforming vertices
+* `sawtooth_wave` - looping the nebula layers
+
+### References and Inspiration
+
+Resources that helped me create this!
+
+* Inigo Quilez, [Domain Warping](https://iquilezles.org/articles/warp/)
+* The Art of Code, [Starfield Shader](https://www.shadertoy.com/view/tlyGW3)
+* [Fire Ring Shader](https://www.shadertoy.com/view/lsf3RH)
+* UPenn CIS 560 Course Notes - Noise Functions
+* UPenn CIS 566 Course Notes - Noise, Toolbox Functions
+
 ## Objective
 
 Get comfortable with using WebGL and its shaders to generate an interesting 3D, continuous surface using a multi-octave noise algorithm.
