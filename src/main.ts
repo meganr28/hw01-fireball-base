@@ -12,17 +12,20 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   tesselations: 5,
-  color: [ 255, 0, 0, 255 ],
-  shape: 'Icosphere',
   surfaceOffset: 1.0,
-  coronaScale: 1.0,
-  'Load Scene': loadScene, // A function pointer, essentially
+  coronaScale: 0.1,
+  starDensity: 20.0,
+  cloudColor: [ 51, 77, 204, 255 ],
+  starColor: [ 51, 77, 204, 255 ],
+  'restoreDefaults': restoreDefaults
 };
 
 let icosphere: Icosphere;
 let square: Square;
 let prevTesselations: number = 5;
-let currentColor = vec4.fromValues(1, 0, 0, 1);
+let cloudColor = vec4.fromValues(0.2, 0.3, 0.8, 1);
+let starColor = vec4.fromValues(0.2, 0.3, 0.8, 1);
+let geometryColor = vec4.fromValues(1, 1, 1, 1);
 let prevNoiseScale: number = 1.0;
 let time = 0;
 
@@ -33,8 +36,15 @@ function loadScene() {
   square.create();
 }
 
-function revertToDefault() {
-  
+function restoreDefaults() {
+  controls.tesselations = 5;
+  controls.surfaceOffset = 1.0;
+  controls.coronaScale = 0.1;
+  controls.starDensity = 20.0;
+  controls.cloudColor = [ 51, 77, 204, 255 ];
+  controls.starColor = [ 51, 77, 204, 255 ];
+  cloudColor = vec4.fromValues(0.2, 0.3, 0.8, 1);
+  starColor = vec4.fromValues(0.2, 0.3, 0.8, 1);
 }
 
 function main() {
@@ -48,14 +58,25 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
-  gui.add(controls, 'tesselations', 0, 8).step(1);
-  gui.addColor(controls, 'color').onChange(function() { currentColor = vec4.fromValues(controls.color[0] / 255, 
-                                                                                       controls.color[1] / 255, 
-                                                                                       controls.color[2] / 255, 
-                                                                                       controls.color[3] / 255); });
-  gui.add(controls, 'surfaceOffset', 0.0, 1.0).step(0.1);
-  gui.add(controls, 'coronaScale', 0.0, 1.0).step(0.1);
-  gui.add(controls, 'Load Scene');
+  gui.add(controls, 'tesselations', 0, 6).step(1).listen();
+  gui.add(controls, 'surfaceOffset', 0.1, 1.0).step(0.1).listen(); 
+  gui.add(controls, 'coronaScale', 0.05, 0.15).step(0.01).listen();   
+  gui.add(controls, 'starDensity', 10.0, 50.0).step(1.0).listen();
+  gui.addColor(controls, 'cloudColor').onChange(function() { 
+                                                cloudColor = vec4.fromValues(
+                                                  controls.cloudColor[0] / 255, 
+                                                  controls.cloudColor[1] / 255, 
+                                                  controls.cloudColor[2] / 255, 
+                                                  controls.cloudColor[3] / 255); 
+                                                }).listen();
+  gui.addColor(controls, 'starColor').onChange(function() { 
+                                               starColor = vec4.fromValues(
+                                                controls.starColor[0] / 255, 
+                                                controls.starColor[1] / 255, 
+                                                controls.starColor[2] / 255, 
+                                                controls.starColor[3] / 255); 
+                                              }).listen();
+  gui.add(controls, 'restoreDefaults').listen();
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -86,8 +107,8 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/fireball-frag.glsl')),
   ]);
 
-  fireball.setNoiseScale(controls.surfaceOffset);
-  background.setNoiseScale(controls.surfaceOffset);
+  //fireball.setNoiseScale(controls.surfaceOffset);
+  //background.setNoiseScale(controls.surfaceOffset);
 
   // This function will be called every frame
   function tick() {
@@ -101,23 +122,28 @@ function main() {
       icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       icosphere.create();
     }
-    if (controls.surfaceOffset != prevNoiseScale)
-    {
-      prevNoiseScale = controls.surfaceOffset;
+    //if (controls.surfaceOffset != prevNoiseScale)
+    //{
+      //prevNoiseScale = controls.surfaceOffset;
       fireball.setNoiseScale(controls.surfaceOffset);
       background.setNoiseScale(controls.surfaceOffset);
-    }
+    //}
+
+    background.setCoronaScale(controls.coronaScale);
+    background.setStarDensity(controls.starDensity);
+    background.setCloudColor(cloudColor);
+    background.setStarColor(starColor);
 
     time++;
 
     // Render background first, then star
     gl.disable(gl.DEPTH_TEST);
 
-    renderer.render(camera, background, currentColor, time, [square]);
+    renderer.render(camera, background, geometryColor, time, [square]);
 
     gl.enable(gl.DEPTH_TEST);
 
-    //renderer.render(camera, fireball, currentColor, time, [icosphere]);
+    renderer.render(camera, fireball, geometryColor, time, [icosphere]);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame

@@ -29,8 +29,12 @@ class ShaderProgram {
   unifModelInvTr: WebGLUniformLocation;
   unifViewProj: WebGLUniformLocation;
   unifColor: WebGLUniformLocation;
+  unifCloudColor: WebGLUniformLocation;
+  unifStarColor: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
   unifNoiseScale: WebGLUniformLocation;
+  unifCoronaScale: WebGLUniformLocation;
+  unifStarDensity: WebGLUniformLocation;
   unifDimensions: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
@@ -51,8 +55,12 @@ class ShaderProgram {
     this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
     this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
     this.unifColor      = gl.getUniformLocation(this.prog, "u_Color");
+    this.unifCloudColor = gl.getUniformLocation(this.prog, "u_CloudColor");
+    this.unifStarColor = gl.getUniformLocation(this.prog, "u_StarColor");
     this.unifTime      = gl.getUniformLocation(this.prog, "u_Time");
     this.unifNoiseScale = gl.getUniformLocation(this.prog, "u_NoiseScale");
+    this.unifCoronaScale = gl.getUniformLocation(this.prog, "u_CoronaScale");
+    this.unifStarDensity = gl.getUniformLocation(this.prog, "u_StarDensity");
     this.unifDimensions = gl.getUniformLocation(this.prog, "u_Dimensions");
   }
 
@@ -91,6 +99,20 @@ class ShaderProgram {
     }
   }
 
+  setCloudColor(color: vec4) {
+    this.use();
+    if (this.unifCloudColor !== -1) {
+      gl.uniform4fv(this.unifCloudColor, color);
+    }
+  }
+
+  setStarColor(color: vec4) {
+    this.use();
+    if (this.unifStarColor !== -1) {
+      gl.uniform4fv(this.unifStarColor, color);
+    }
+  }
+
   setTime(time: number) {
     this.use();
     if (this.unifTime !== -1) {
@@ -102,6 +124,20 @@ class ShaderProgram {
     this.use();
     if (this.unifNoiseScale !== -1) {
       gl.uniform1f(this.unifNoiseScale, scale);
+    }
+  }
+
+  setCoronaScale(scale: number) {
+    this.use();
+    if (this.unifCoronaScale !== -1) {
+      gl.uniform1f(this.unifCoronaScale, scale);
+    }
+  }
+
+  setStarDensity(density: number) {
+    this.use();
+    if (this.unifStarDensity !== -1) {
+      gl.uniform1f(this.unifStarDensity, density);
     }
   }
 

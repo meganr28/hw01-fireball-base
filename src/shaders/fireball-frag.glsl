@@ -56,12 +56,6 @@ vec3 computeColor(float noise)
     return fire[4];
 }
 
-// From Inigo Quilez - "Color Palettes" https://iquilezles.org/articles/palettes/ 
-vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d)
-{
-    return a + b * cos(6.28318 * (c * t + d));
-}
-
 // Noise and interpolation functions based on CIS 560 and CIS 566 Slides - "Noise Functions"
 float noise3D(vec3 p) 
 {
@@ -124,19 +118,7 @@ float fbm3D(vec3 p)
 void main()
 {
         // Material base color (before shading)
-        vec4 diffuseColor = u_Color;
-
-        // Define color palette
-        /*vec3 a = vec3(1.0, 0.4, 0.0);
-        vec3 b = vec3(0.4, 0.8, 0.0);
-        vec3 c = vec3(0.45, 0.3, 0.9);
-        vec3 d = vec3(0.9, 0.25, 0.5);*/
-
-        vec3 a = vec3(0.5f);
-        vec3 b = vec3(0.5f);
-        vec3 c = vec3(1.0f);
-        vec3 d = vec3(0.0f, 0.1f, 0.2f);
-        //float t = 0.5f * sin(float(u_Time) / 500.f);    
+        vec4 diffuseColor = u_Color; 
 
         // Calculate the diffuse term for Lambert shading
         float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
@@ -151,7 +133,6 @@ void main()
 
         // Calculate distorted fbm
         float s = 0.5 * (sin(float(u_Time) / 100.f) + 1.f);
-        //float s = 4.0;
         vec3 p1 = vec3(fbm3D(fs_Pos.xyz), fbm3D(fs_Pos.xyz + vec3(1.3f, 3.5f, 4.5f)), fbm3D(fs_Pos.xyz + vec3(4.4f, 3.2f, 9.0f)));
         vec3 p2 = vec3(fbm3D(fs_Pos.xyz), fbm3D(fs_Pos.xyz + vec3(10.3f, 3.3f, 1.4f)), fbm3D(fs_Pos.xyz + vec3(5.6f, 45.2f, 2.0f)));
         float fbmDist = fbm3D(p1 + s * p2);
@@ -161,8 +142,6 @@ void main()
         fbm = fbmDist * fs_Col.y * pow(fbm, 0.3);
 
         // Compute final shaded color
-        vec3 paletteColor = palette(fbm, a, b, c, d);
         vec3 computedColor = computeColor(fbm);
-        //out_Col = vec4(mix(paletteColor.xyz, computedColor.xyz, 0.7), 1.0);
         out_Col = vec4(computedColor.xyz, 1.0);
 }

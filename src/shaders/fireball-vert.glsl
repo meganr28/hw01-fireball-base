@@ -237,7 +237,6 @@ void main()
 
     // Distorted fbm
     float s = 0.5 * (sin(float(u_Time) / 100.f) + 1.f);
-    //float s = 4.0;
     vec3 p1 = vec3(fbm3D(fs_Pos.xyz), fbm3D(fs_Pos.xyz + vec3(1.3f, 3.5f, 4.5f)), fbm3D(fs_Pos.xyz + vec3(4.4f, 3.2f, 9.0f)));
     vec3 p2 = vec3(fbm3D(fs_Pos.xyz), fbm3D(fs_Pos.xyz + vec3(10.3f, 3.3f, 1.4f)), fbm3D(fs_Pos.xyz + vec3(5.6f, 45.2f, 2.0f)));
     float fbmDist = fbm3D(p1 + s * p2);
